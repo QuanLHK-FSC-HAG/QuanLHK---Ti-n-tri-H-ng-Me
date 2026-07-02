@@ -15,6 +15,7 @@ import {
   DEFAULT_ABSENT_PARAMS,
   DEFAULT_POSITION_PARAMS
 } from './src/utils/algorithms';
+import rawData from './src/data/xsmb-2-digits.json';
 
 // Load env variables
 dotenv.config();
@@ -183,15 +184,9 @@ function ensureRecordsUpToDate() {
 // Load XSMB 2D dataset and map it to XSMN
 function loadDataset() {
   try {
-    const dataPath = path.join(process.cwd(), 'src', 'data', 'xsmb-2-digits.json');
-    if (fs.existsSync(dataPath)) {
-      const rawData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-      allRecords = parseLotteryRecords(rawData);
-      console.log(`Successfully loaded and mapped ${allRecords.length} historical XSMN records.`);
-      ensureRecordsUpToDate();
-    } else {
-      console.warn(`Lottery data file not found at ${dataPath}.`);
-    }
+    allRecords = parseLotteryRecords(rawData);
+    console.log(`Successfully loaded and mapped ${allRecords.length} historical XSMN records from embedded JSON.`);
+    ensureRecordsUpToDate();
   } catch (error) {
     console.error('Error loading lottery records:', error);
   }
@@ -816,7 +811,7 @@ async function startServer() {
     app.use(vite.middlewares);
     console.log('Vite development server middleware loaded.');
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = typeof __dirname !== 'undefined' ? __dirname : path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
