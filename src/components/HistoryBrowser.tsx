@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Calendar, ChevronLeft, ChevronRight, Loader2, RefreshCw } from 'lucide-react';
 import { LotteryRecord } from '../types';
+import { getClientHistory } from '../utils/clientLotteryService';
 
 export default function HistoryBrowser({ lotteryType }: { lotteryType: 'xsmn' | 'power_655' | 'mega_645' }) {
   const [records, setRecords] = useState<LotteryRecord[]>([]);
@@ -26,13 +27,31 @@ export default function HistoryBrowser({ lotteryType }: { lotteryType: 'xsmn' | 
         lotteryType
       });
       const res = await fetch(`/api/history?${params.toString()}`);
-      if (!res.ok) throw new Error('Không thể tải lịch sử xổ số');
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) {
+        throw new Error('Backend API not available or did not return JSON');
+      }
       const data = await res.json();
       setRecords(data.records);
       setTotalPages(data.pagination.totalPages);
       setTotalRecords(data.pagination.total);
     } catch (err) {
-      console.error(err);
+      console.warn('Backend history API failed, running history search client-side:', err);
+      try {
+        const clientData = getClientHistory(
+          page,
+          15,
+          startDate,
+          endDate,
+          searchNumber.trim(),
+          lotteryType
+        );
+        setRecords(clientData.records);
+        setTotalPages(clientData.pagination.totalPages);
+        setTotalRecords(clientData.pagination.total);
+      } catch (clientErr) {
+        console.error('Client-side history also failed:', clientErr);
+      }
     } finally {
       setLoading(false);
     }

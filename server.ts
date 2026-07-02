@@ -129,49 +129,46 @@ function ensureRecordsUpToDate() {
   while (current <= today) {
     const dateStr = current.toISOString().split('T')[0];
     
-    // Check if record already exists
-    if (!allRecords.some(r => r.date === dateStr)) {
-      const rand = seedRandom(dateStr + "-xsmn-generator");
-      
-      // Generate 18 prizes
-      const prizes: number[] = [];
-      for (let i = 0; i < 18; i++) {
-        prizes.push(Math.floor(rand() * 100));
-      }
-      
-      const special = prizes[0];
-      const prize1 = prizes[1];
-      const prize8 = prizes[17];
-      
-      allRecords.push({
-        date: dateStr,
+    const rand = seedRandom(dateStr + "-xsmn-generator");
+    
+    // Generate 18 prizes
+    const prizes: number[] = [];
+    for (let i = 0; i < 18; i++) {
+      prizes.push(Math.floor(rand() * 100));
+    }
+    
+    const special = prizes[0];
+    const prize1 = prizes[1];
+    const prize8 = prizes[17];
+    
+    allRecords.push({
+      date: dateStr,
+      special,
+      prize1,
+      prize8,
+      prizes,
+      raw: {
         special,
         prize1,
-        prize8,
-        prizes,
-        raw: {
-          special,
-          prize1,
-          prize2_1: prizes[2],
-          prize2_2: prizes[3],
-          prize3_1: prizes[4],
-          prize3_2: prizes[5],
-          prize3_3: prizes[6],
-          prize3_4: prizes[7],
-          prize3_5: prizes[8],
-          prize3_6: prizes[9],
-          prize4_1: prizes[10],
-          prize4_2: prizes[11],
-          prize4_3: prizes[12],
-          prize4_4: prizes[13],
-          prize5_1: prizes[14],
-          prize5_2: prizes[15],
-          prize5_3: prizes[16],
-          prize5_4: prizes[17]
-        }
-      });
-      added++;
-    }
+        prize2_1: prizes[2],
+        prize2_2: prizes[3],
+        prize3_1: prizes[4],
+        prize3_2: prizes[5],
+        prize3_3: prizes[6],
+        prize3_4: prizes[7],
+        prize3_5: prizes[8],
+        prize3_6: prizes[9],
+        prize4_1: prizes[10],
+        prize4_2: prizes[11],
+        prize4_3: prizes[12],
+        prize4_4: prizes[13],
+        prize5_1: prizes[14],
+        prize5_2: prizes[15],
+        prize5_3: prizes[16],
+        prize5_4: prizes[17]
+      }
+    });
+    added++;
     current.setDate(current.getDate() + 1);
   }
   

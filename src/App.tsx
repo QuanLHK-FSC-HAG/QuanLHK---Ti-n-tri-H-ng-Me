@@ -43,6 +43,12 @@ import {
   DEFAULT_POSITION_PARAMS 
 } from './utils/algorithms';
 
+import {
+  getClientPredict,
+  getClientPerformance,
+  getClientOptimize
+} from './utils/clientLotteryService';
+
 import AiGenerator from './components/AiGenerator';
 import HistoryBrowser from './components/HistoryBrowser';
 
@@ -110,12 +116,12 @@ export default function App() {
   const handlePredict = async () => {
     setPredictLoading(true);
     setSelectedPredictionItem(null);
-    try {
-      let paramsToPass = {};
-      if (algorithmId === 'multi_factor') paramsToPass = multiFactorParams;
-      else if (algorithmId === 'days_absent') paramsToPass = absentParams;
-      else paramsToPass = positionParams;
+    let paramsToPass = {};
+    if (algorithmId === 'multi_factor') paramsToPass = multiFactorParams;
+    else if (algorithmId === 'days_absent') paramsToPass = absentParams;
+    else paramsToPass = positionParams;
 
+    try {
       const res = await fetch('/api/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -127,14 +133,27 @@ export default function App() {
         })
       });
 
-      if (!res.ok) throw new Error('Dự đoán thất bại');
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) {
+        throw new Error('Backend API not available or did not return JSON');
+      }
       const data = await res.json();
       setPredictResponse(data);
       if (data.predictions && data.predictions.length > 0) {
         setSelectedPredictionItem(data.predictions[0]);
       }
     } catch (error) {
-      console.error(error);
+      console.warn('Backend API failed, running prediction client-side:', error);
+      // Client-side fallback
+      try {
+        const clientData = getClientPredict(predictDate, algorithmId, paramsToPass, lotteryType);
+        setPredictResponse(clientData);
+        if (clientData.predictions && clientData.predictions.length > 0) {
+          setSelectedPredictionItem(clientData.predictions[0]);
+        }
+      } catch (clientErr) {
+        console.error('Client-side prediction also failed:', clientErr);
+      }
     } finally {
       setPredictLoading(false);
     }
@@ -143,12 +162,12 @@ export default function App() {
   // Run performance analysis API call
   const handlePerformance = async () => {
     setPerfLoading(true);
-    try {
-      let paramsToPass = {};
-      if (algorithmId === 'multi_factor') paramsToPass = multiFactorParams;
-      else if (algorithmId === 'days_absent') paramsToPass = absentParams;
-      else paramsToPass = positionParams;
+    let paramsToPass = {};
+    if (algorithmId === 'multi_factor') paramsToPass = multiFactorParams;
+    else if (algorithmId === 'days_absent') paramsToPass = absentParams;
+    else paramsToPass = positionParams;
 
+    try {
       const res = await fetch('/api/performance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -161,11 +180,21 @@ export default function App() {
         })
       });
 
-      if (!res.ok) throw new Error('Tính hiệu suất thất bại');
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) {
+        throw new Error('Backend API not available or did not return JSON');
+      }
       const data = await res.json();
       setPerfResponse(data);
     } catch (error) {
-      console.error(error);
+      console.warn('Backend API failed, running performance client-side:', error);
+      // Client-side fallback
+      try {
+        const clientData = getClientPerformance(perfStartDate, perfEndDate, algorithmId, paramsToPass, lotteryType);
+        setPerfResponse(clientData);
+      } catch (clientErr) {
+        console.error('Client-side performance calculation failed:', clientErr);
+      }
     } finally {
       setPerfLoading(false);
     }
@@ -187,11 +216,21 @@ export default function App() {
         })
       });
 
-      if (!res.ok) throw new Error('Tối ưu hóa thất bại');
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) {
+        throw new Error('Backend API not available or did not return JSON');
+      }
       const data = await res.json();
       setOptResponse(data);
     } catch (error) {
-      console.error(error);
+      console.warn('Backend API failed, running parameter optimization client-side:', error);
+      // Client-side fallback
+      try {
+        const clientData = getClientOptimize(optStartDate, optEndDate, algorithmId, lotteryType);
+        setOptResponse(clientData);
+      } catch (clientErr) {
+        console.error('Client-side optimization failed:', clientErr);
+      }
     } finally {
       setOptLoading(false);
       setIsOptimizing(false);
