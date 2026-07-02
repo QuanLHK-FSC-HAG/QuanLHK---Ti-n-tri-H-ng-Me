@@ -1,0 +1,6 @@
+{
+  "name": "QuanLHK - Tiên tri Hàng Me",
+  "description": "Phần mềm Tiên tri Hàng Me - Dự đoán chính xác kết quả XSMN (Xổ số miền Nam) và Vietlott (Power 6/55, Mega 6/45) với tỉ lệ phần trăm xuất hiện, tích hợp thuật toán định lượng cao cấp Hoàng Kim.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
